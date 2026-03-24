@@ -2,54 +2,131 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Quỹ Chung Online - Công Ty Lừa Đảo Uy Tín</title>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <title>Quỹ Chung Bảo Mật - Công Ty Lừa Đảo</title>
     <style>
-        body { font-family: sans-serif; background: #e0e5ec; text-align: center; padding: 20px; }
-        .jar { width: 120px; height: 200px; border: 4px solid white; border-radius: 10px 10px 30px 30px; margin: 20px auto; position: relative; background: rgba(255,255,255,0.3); overflow: hidden; }
-        .btn-group button { padding: 15px; margin: 5px; cursor: pointer; border-radius: 10px; border: none; color: white; font-weight: bold; font-size: 16px; }
-        #history { background: white; max-width: 400px; margin: 20px auto; height: 250px; overflow-y: auto; text-align: left; padding: 15px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .item { border-bottom: 1px solid #eee; padding: 8px; font-size: 14px; }
-        .money-note { position: absolute; width: 30px; height: 15px; background: #a5d6a7; border: 1px solid green; animation: fall 0.7s forwards; }
-        @keyframes fall { 0% { top: -20px; left: 45px; } 100% { top: 170px; left: 40px; } }
+        body { font-family: 'Segoe UI', sans-serif; background: #e0e5ec; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        
+        /* Màn hình đăng nhập */
+        #login-screen { background: white; padding: 30px; border-radius: 20px; box-shadow: 10px 10px 20px #bebebe; text-align: center; width: 320px; }
+        .user-slot { margin: 15px 0; padding: 15px; border: 2px dashed #3498db; border-radius: 12px; }
+        input { width: 80%; margin: 5px 0; padding: 10px; border-radius: 8px; border: 1px solid #ddd; }
+        button { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.3s; }
+        .btn-main { background: #3498db; color: white; padding: 10px 20px; width: 90%; }
+        .btn-main:hover { background: #2980b9; }
+
+        /* Giao diện chính */
+        #game-interface { display: none; width: 90%; max-width: 800px; gap: 20px; flex-direction: row; }
+        .main-panel { background: white; padding: 25px; border-radius: 20px; box-shadow: 5px 5px 15px rgba(0,0,0,0.1); flex: 1; text-align: center; }
+        #history-panel { background: #f9f9f9; padding: 15px; border-radius: 15px; width: 280px; height: 400px; overflow-y: auto; text-align: left; border-left: 4px solid #3498db; }
+        
+        .balance { font-size: 30px; font-weight: bold; color: #27ae60; margin: 15px 0; }
+        .jar { width: 100px; height: 180px; border: 4px solid #333; border-radius: 10px 10px 30px 30px; margin: 20px auto; position: relative; background: rgba(255,255,255,0.5); overflow: hidden; }
+        
+        .money-note { position: absolute; width: 30px; height: 15px; background: #2ecc71; border: 1px solid #27ae60; animation: fall 0.6s forwards; }
+        @keyframes fall { 0% { top: -20px; left: 40px; } 100% { top: 150px; left: 35px; } }
+        
+        .history-item { font-size: 13px; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .history-item b { color: #2980b9; }
     </style>
 </head>
 <body>
-    <h2>💰 QUỸ CHUNG ONLINE 💰</h2>
-    <p><i>Công ty lừa đảo uy tín số 1 thế giới</i></p>
-    <h1 id="total-display">0 VNĐ</h1>
-    <div class="jar" id="jar"></div>
-    <div class="btn-group">
-        <button style="background: #4caf50;" onclick="sendMoney(1000)">+1.000đ</button>
-        <button style="background: #2196f3;" onclick="sendMoney(5000)">+5.000đ</button>
-    </div>
-    <div id="history">
-        <h4 style="text-align: center; margin: 0 0 10px 0;">Lịch sử đóng góp</h4>
-        <div id="list"></div>
-    </div>
-    <script>
-        // Tên người dùng tạm thời
-        let myName = localStorage.getItem('user_name') || prompt("Nhập tên của bạn để bắt đầu:") || "Ẩn danh";
-        localStorage.setItem('user_name', myName);
 
-        // --- ĐÂY LÀ ĐOẠN BẠN CẦN DÁN MÃ FIREBASE VÀO SAU ---
-        // Hiện tại nó sẽ chỉ chạy trên máy bạn cho đến khi bạn dán mã Firebase thật
-        let total = 0;
-        function sendMoney(amount) {
-            total += amount;
-            document.getElementById('total-display').innerText = total.toLocaleString() + " VNĐ";
-            const list = document.getElementById('list');
-            list.innerHTML = `<div class="item"><b>${myName}</b> vừa thả: +${amount.toLocaleString()}đ</div>` + list.innerHTML;
-            showEffect();
+    <div id="login-screen">
+        <h3>🔐 ĐĂNG NHẬP QUỸ</h3>
+        <div id="user-slots"></div>
+    </div>
+
+    <div id="game-interface">
+        <div class="main-panel">
+            <p id="welcome-txt" style="font-weight: bold; color: #7f8c8d;"></p>
+            <div class="balance">Tổng: <span id="total-val">0</span>đ</div>
+            <div class="jar" id="jar"></div>
+            <div style="display:flex; justify-content:center; gap:10px;">
+                <button onclick="addMoney(1000)" style="background:#2ecc71; color:white; padding:15px 20px;">+1k</button>
+                <button onclick="addMoney(5000)" style="background:#3498db; color:white; padding:15px 20px;">+5k</button>
+            </div>
+            <br>
+            <button onclick="location.reload()" style="background:#95a5a6; color:white; padding:8px 15px;">Đăng xuất</button>
+        </div>
+
+        <div id="history-panel">
+            <h4 style="text-align:center; margin-top:0;">📝 LỊCH SỬ</h4>
+            <div id="history-list"></div>
+        </div>
+    </div>
+
+    <script>
+        // Dữ liệu mẫu (Khi dùng Firebase sẽ thay đoạn này)
+        let data = JSON.parse(localStorage.getItem('myJarData')) || {
+            users: [null, null, null],
+            balance: 0,
+            history: []
+        };
+        let activeUser = null;
+
+        function renderLogin() {
+            const container = document.getElementById('user-slots');
+            container.innerHTML = '';
+            for(let i=0; i<3; i++) {
+                const u = data.users[i];
+                const div = document.createElement('div');
+                div.className = 'user-slot';
+                if(u) {
+                    div.innerHTML = `<b>${u.name}</b><br><input type="password" id="p${i}" placeholder="Mật khẩu"><br><button class="btn-main" onclick="login(${i})">Vào hũ</button>`;
+                } else {
+                    div.innerHTML = `<i>Slot Trống</i><br><input type="text" id="n${i}" placeholder="Tên"><br><input type="password" id="pw${i}" placeholder="Mật khẩu"><br><button class="btn-main" onclick="register(${i})">Tạo tài khoản</button>`;
+                }
+                container.appendChild(div);
+            }
         }
-        function showEffect() {
-            const note = document.createElement('div');
-            note.className = 'money-note';
-            document.getElementById('jar').appendChild(note);
-            setTimeout(() => note.remove(), 700);
+
+        function register(i) {
+            const name = document.getElementById(`n${i}`).value;
+            const pass = document.getElementById(`pw${i}`).value;
+            if(!name || !pass) return alert("Nhập đủ tên & pass nha!");
+            data.users[i] = { name, pass };
+            save(); renderLogin();
         }
+
+        function login(i) {
+            const inputPass = document.getElementById(`p${i}`).value;
+            if(inputPass === data.users[i].pass) {
+                activeUser = data.users[i].name;
+                startApp();
+            } else { alert("Sai pass rồi chủ tịch ơi!"); }
+        }
+
+        function startApp() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('game-interface').style.display = 'flex';
+            document.getElementById('welcome-txt').innerText = "Chủ tịch: " + activeUser;
+            updateUI();
+        }
+
+        function addMoney(amt) {
+            data.balance += amt;
+            data.history.unshift({ name: activeUser, amount: amt, time: new Date().toLocaleTimeString() });
+            if(data.history.length > 20) data.history.pop();
+            save(); updateUI(); dropEffect();
+        }
+
+        function updateUI() {
+            document.getElementById('total-val').innerText = data.balance.toLocaleString();
+            const hList = document.getElementById('history-list');
+            hList.innerHTML = '';
+            data.history.forEach(h => {
+                hList.innerHTML += `<div class="history-item"><b>${h.name}</b>: +${h.amount}đ <small>(${h.time})</small></div>`;
+            });
+        }
+
+        function dropEffect() {
+            const n = document.createElement('div'); n.className = 'money-note';
+            document.getElementById('jar').appendChild(n);
+            setTimeout(() => n.remove(), 600);
+        }
+
+        function save() { localStorage.setItem('myJarData', JSON.stringify(data)); }
+        renderLogin();
     </script>
 </body>
 </html>
-Update code
