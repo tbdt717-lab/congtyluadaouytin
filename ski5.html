@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Hũ Tiền Online Chung</title>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    
+    <style>
+        /* (Giữ nguyên phần CSS đẹp đẽ của bản cũ nhé) */
+        body { font-family: sans-serif; background: #e0e5ec; text-align: center; padding: 20px; }
+        #chai-dung-tien { width: 120px; height: 220px; border: 4px solid white; border-radius: 10px 10px 30px 30px; margin: 20px auto; position: relative; background: rgba(255,255,255,0.2); overflow: hidden; }
+        .btn-group button { padding: 15px; margin: 5px; cursor: pointer; border-radius: 10px; border: none; color: white; font-weight: bold; }
+        #history { background: white; max-width: 400px; margin: 20px auto; height: 200px; overflow-y: auto; text-align: left; padding: 10px; border-radius: 10px; }
+        .item { border-bottom: 1px solid #eee; padding: 5px; font-size: 13px; }
+        .money-note { position: absolute; width: 30px; height: 15px; background: #a5d6a7; animation: fall 0.7s forwards; }
+        @keyframes fall { 0% { top: -20px; left: 45px; } 100% { top: 190px; left: 40px; } }
+    </style>
+</head>
+<body>
+
+    <h2>Quỹ Chung Online</h2>
+    <h1 id="total-display">Đang tải...</h1>
+    <div id="chai-dung-tien"></div>
+
+    <div class="btn-group">
+        <button style="background: #4caf50;" onclick="sendMoney(1000)">+1.000đ</button>
+        <button style="background: #2196f3;" onclick="sendMoney(5000)">+5.000đ</button>
+    </div>
+
+    <div id="history">
+        <h4 style="text-align: center; margin-top: 0;">Lịch sử thế giới</h4>
+        <div id="list"></div>
+    </div>
+
+    <script>
+        // --- BƯỚC QUAN TRỌNG: DÁN MÃ CONFIG CỦA BẠN VÀO ĐÂY ---
+        const firebaseConfig = {
+            apiKey: "DÁN_API_KEY_CỦA_BẠN",
+            authDomain: "DÁN_VÀO_ĐÂY",
+            databaseURL: "DÁN_VÀO_ĐÂY",
+            projectId: "DÁN_VÀO_ĐÂY",
+            storageBucket: "DÁN_VÀO_ĐÂY",
+            messagingSenderId: "DÁN_VÀO_ĐÂY",
+            appId: "DÁN_VÀO_ĐÂY"
+        };
+        // ---------------------------------------------------
+
+        // Khởi tạo Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Lấy tên người dùng (tạm thời dùng prompt để đơn giản)
+        let myName = localStorage.getItem('chatName');
+        if(!myName) {
+            myName = prompt("Nhập tên hiển thị của bạn:") || "Người ẩn danh";
+            localStorage.setItem('chatName', myName);
+        }
+
+        // LẮNG NGHE DỮ LIỆU THAY ĐỔI TRÊN CLOUD
+        db.ref('quyChung').on('value', (snapshot) => {
+            const data = snapshot.val() || { total: 0, history: [] };
+            document.getElementById('total-display').innerText = data.total.toLocaleString() + " VNĐ";
+            
+            // Cập nhật lịch sử
+            const listDiv = document.getElementById('list');
+            listDiv.innerHTML = '';
+            if(data.history) {
+                Object.values(data.history).reverse().forEach(item => {
+                    listDiv.innerHTML += `<div class="item"><b>${item.user}</b>: +${item.amount}đ <small>(${item.time})</small></div>`;
+                });
+            }
+        });
+
+        // GỬI TIỀN LÊN CLOUD
+        function sendMoney(amount) {
+            // Đọc giá trị hiện tại rồi cộng thêm
+            db.ref('quyChung').once('value', (snapshot) => {
+                let currentTotal = (snapshot.val() && snapshot.val().total) ? snapshot.val().total : 0;
+                
+                // Cập nhật tổng
+                db.ref('quyChung/total').set(currentTotal + amount);
+                
+                // Thêm vào lịch sử
+                db.ref('quyChung/history').push({
+                    user: myName,
+                    amount: amount,
+                    time: new Date().toLocaleTimeString()
+                });
+
+                // Hiệu ứng rơi tại máy mình
+                showEffect();
+            });
+        }
+
+        function showEffect() {
+            const note = document.createElement('div');
+            note.className = 'money-note';
+            document.getElementById('chai-dung-tien').appendChild(note);
+            setTimeout(() => note.remove(), 700);
+        }
+    </script>
+</body>
+</html>
