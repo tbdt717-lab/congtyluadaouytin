@@ -2,131 +2,233 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Quỹ Chung Bảo Mật - Công Ty Lừa Đảo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quỹ Chung - Công Ty Lừa Đảo Uy Tín</title>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #e0e5ec; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f3e5f5; color: #4a148c; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
         
         /* Màn hình đăng nhập */
-        #login-screen { background: white; padding: 30px; border-radius: 20px; box-shadow: 10px 10px 20px #bebebe; text-align: center; width: 320px; }
-        .user-slot { margin: 15px 0; padding: 15px; border: 2px dashed #3498db; border-radius: 12px; }
-        input { width: 80%; margin: 5px 0; padding: 10px; border-radius: 8px; border: 1px solid #ddd; }
-        button { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.3s; }
-        .btn-main { background: #3498db; color: white; padding: 10px 20px; width: 90%; }
-        .btn-main:hover { background: #2980b9; }
+        #login-screen { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(106, 27, 154, 0.2); width: 320px; text-align: center; }
+        .user-slot { margin: 15px 0; padding: 15px; border: 2px dashed #ab47bc; border-radius: 12px; background: #fafafa; }
+        input { width: 85%; margin: 5px 0; padding: 10px; border-radius: 8px; border: 1px solid #ce93d8; outline: none; }
+        button { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.3s; padding: 10px 20px; color: white; }
+        .btn-purple { background: #8e24aa; width: 95%; margin-top: 10px; }
+        .btn-purple:hover { background: #6a1b9a; }
 
         /* Giao diện chính */
-        #game-interface { display: none; width: 90%; max-width: 800px; gap: 20px; flex-direction: row; }
-        .main-panel { background: white; padding: 25px; border-radius: 20px; box-shadow: 5px 5px 15px rgba(0,0,0,0.1); flex: 1; text-align: center; }
-        #history-panel { background: #f9f9f9; padding: 15px; border-radius: 15px; width: 280px; height: 400px; overflow-y: auto; text-align: left; border-left: 4px solid #3498db; }
+        #game-interface { display: none; width: 95%; max-width: 900px; gap: 20px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+        .main-panel { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(106, 27, 154, 0.2); flex: 1; min-width: 300px; text-align: center; position: relative; }
+        #history-panel { background: white; padding: 20px; border-radius: 20px; width: 300px; height: 500px; overflow-y: auto; box-shadow: 0 10px 25px rgba(106, 27, 154, 0.2); border-top: 5px solid #ab47bc; }
         
-        .balance { font-size: 30px; font-weight: bold; color: #27ae60; margin: 15px 0; }
-        .jar { width: 100px; height: 180px; border: 4px solid #333; border-radius: 10px 10px 30px 30px; margin: 20px auto; position: relative; background: rgba(255,255,255,0.5); overflow: hidden; }
+        /* Thanh tiến độ 1 Triệu */
+        .progress-container { width: 100%; background: #e1bee7; border-radius: 20px; margin: 15px 0; height: 25px; overflow: hidden; position: relative; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #ba68c8, #8e24aa); width: 0%; transition: width 0.5s ease; }
+        .progress-text { position: absolute; top: 2px; left: 0; right: 0; font-size: 14px; font-weight: bold; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+
+        .balance { font-size: 35px; font-weight: 900; color: #6a1b9a; margin: 10px 0; }
         
-        .money-note { position: absolute; width: 30px; height: 15px; background: #2ecc71; border: 1px solid #27ae60; animation: fall 0.6s forwards; }
-        @keyframes fall { 0% { top: -20px; left: 40px; } 100% { top: 150px; left: 35px; } }
+        /* Lọ đựng tiền */
+        .jar-container { position: relative; width: 160px; height: 220px; margin: 20px auto; }
+        .jar { width: 100%; height: 100%; border: 6px solid #8e24aa; border-top: none; border-radius: 0 0 40px 40px; background: rgba(225, 190, 231, 0.3); position: absolute; bottom: 0; overflow: hidden; z-index: 2; box-shadow: inset 0 -20px 30px rgba(106, 27, 154, 0.1); }
+        .jar-lid { width: 180px; height: 20px; background: #6a1b9a; border-radius: 10px; position: absolute; top: -10px; left: -10px; z-index: 3; }
         
-        .history-item { font-size: 13px; padding: 8px 0; border-bottom: 1px solid #eee; }
-        .history-item b { color: #2980b9; }
+        /* Tiền rơi và nằm lại */
+        .money-note { position: absolute; width: 40px; height: 20px; color: white; font-size: 10px; font-weight: bold; line-height: 20px; text-align: center; border-radius: 3px; z-index: 1; animation: fallDrop 0.8s forwards ease-in; }
+        .m1k { background: #4caf50; border: 1px solid #2e7d32; }
+        .m5k { background: #2196f3; border: 1px solid #1565c0; }
+        
+        @keyframes fallDrop { 
+            0% { top: -50px; transform: rotate(0deg); } 
+            100% { top: var(--stop-y); transform: rotate(var(--rot)); } 
+        }
+
+        .btn-add { font-size: 18px; padding: 15px 25px; margin: 5px; border-radius: 12px; box-shadow: 0 5px 0 rgba(0,0,0,0.2); transition: 0.1s; }
+        .btn-add:active { transform: translateY(5px); box-shadow: none; }
+        
+        .history-item { font-size: 14px; padding: 10px; border-bottom: 1px solid #f3e5f5; display: flex; justify-content: space-between; }
+        .history-item b { color: #8e24aa; }
+        
+        #overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); color: white; display: flex; justify-content: center; align-items: center; z-index: 999; flex-direction: column; text-align: center; }
     </style>
 </head>
 <body>
 
+    <div id="overlay">
+        <h2>⚠️ BẠN CHƯA CÀI ĐẶT FIREBASE ⚠️</h2>
+        <p>Hũ tiền cần "nhà kho" để 3 người cùng xem được.</p>
+        <p>Hãy làm theo Bước 2 trong hướng dẫn để lấy mã Firebase dán vào Code nhé!</p>
+    </div>
+
     <div id="login-screen">
-        <h3>🔐 ĐĂNG NHẬP QUỸ</h3>
+        <h2 style="color: #6a1b9a;">💜 ĐĂNG NHẬP HŨ</h2>
+        <p style="font-size: 13px;">Tối đa 3 Chủ Tịch được tham gia</p>
         <div id="user-slots"></div>
     </div>
 
     <div id="game-interface">
         <div class="main-panel">
-            <p id="welcome-txt" style="font-weight: bold; color: #7f8c8d;"></p>
-            <div class="balance">Tổng: <span id="total-val">0</span>đ</div>
-            <div class="jar" id="jar"></div>
-            <div style="display:flex; justify-content:center; gap:10px;">
-                <button onclick="addMoney(1000)" style="background:#2ecc71; color:white; padding:15px 20px;">+1k</button>
-                <button onclick="addMoney(5000)" style="background:#3498db; color:white; padding:15px 20px;">+5k</button>
+            <h3 style="margin-top: 0;">Xin chào, <span id="welcome-name" style="color: #d81b60;"></span>!</h3>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="prog-bar"></div>
+                <div class="progress-text" id="prog-text">Mục tiêu: 1.000.000đ</div>
             </div>
-            <br>
-            <button onclick="location.reload()" style="background:#95a5a6; color:white; padding:8px 15px;">Đăng xuất</button>
+
+            <div class="balance" id="total-val">0đ</div>
+            
+            <div class="jar-container">
+                <div class="jar-lid"></div>
+                <div class="jar" id="jar"></div>
+            </div>
+            
+            <div>
+                <button class="btn-add m1k" onclick="addMoney(1000)">Thả 1.000đ</button>
+                <button class="btn-add m5k" onclick="addMoney(5000)">Thả 5.000đ</button>
+            </div>
+            <button onclick="location.reload()" style="background: #9e9e9e; margin-top: 20px;">Đăng xuất</button>
         </div>
 
         <div id="history-panel">
-            <h4 style="text-align:center; margin-top:0;">📝 LỊCH SỬ</h4>
+            <h3 style="text-align: center; margin-top: 0; border-bottom: 2px solid #e1bee7; padding-bottom: 10px;">📜 LỊCH SỬ THẢ TIỀN</h3>
             <div id="history-list"></div>
         </div>
     </div>
 
     <script>
-        // Dữ liệu mẫu (Khi dùng Firebase sẽ thay đoạn này)
-        let data = JSON.parse(localStorage.getItem('myJarData')) || {
-            users: [null, null, null],
-            balance: 0,
-            history: []
+        // ==========================================
+        // DÁN MÃ FIREBASE CỦA BẠN VÀO ĐOẠN DƯỚI NÀY
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDgLZCV8oub8ZJM5HJfP_OIh6Hljavbul8",
+          authDomain: "duannghindo-5cc51.firebaseapp.com",
+          projectId: "duannghindo-5cc51",
+          storageBucket: "duannghindo-5cc51.firebasestorage.app",
+          messagingSenderId: "1002300872042",
+          appId: "1:1002300872042:web:1928b2e447c75b33f64113",
+          measurementId: "G-7N3B7BGJEZ"
         };
-        let activeUser = null;
+        // ==========================================
 
-        function renderLogin() {
-            const container = document.getElementById('user-slots');
-            container.innerHTML = '';
-            for(let i=0; i<3; i++) {
-                const u = data.users[i];
-                const div = document.createElement('div');
-                div.className = 'user-slot';
-                if(u) {
-                    div.innerHTML = `<b>${u.name}</b><br><input type="password" id="p${i}" placeholder="Mật khẩu"><br><button class="btn-main" onclick="login(${i})">Vào hũ</button>`;
-                } else {
-                    div.innerHTML = `<i>Slot Trống</i><br><input type="text" id="n${i}" placeholder="Tên"><br><input type="password" id="pw${i}" placeholder="Mật khẩu"><br><button class="btn-main" onclick="register(${i})">Tạo tài khoản</button>`;
+        // Kiểm tra xem đã dán mã chưa
+        if(Object.keys(firebaseConfig).length > 0) {
+            document.getElementById('overlay').style.display = 'none';
+            firebase.initializeApp(firebaseConfig);
+        }
+        
+        const db = typeof firebase !== 'undefined' ? firebase.database() : null;
+        let activeUser = "";
+        let currentTotal = 0;
+
+        // Render 3 slot đăng nhập
+        function loadUsers() {
+            if(!db) return;
+            db.ref('quy_chung/users').on('value', (snapshot) => {
+                const users = snapshot.val() || [null, null, null];
+                const container = document.getElementById('user-slots');
+                container.innerHTML = '';
+                for(let i=0; i<3; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'user-slot';
+                    if(users[i]) {
+                        div.innerHTML = `<b>${users[i].name}</b><br><input type="password" id="p${i}" placeholder="Mật khẩu"><br><button class="btn-purple" onclick="login(${i}, '${users[i].pass}', '${users[i].name}')">Mở Hũ</button>`;
+                    } else {
+                        div.innerHTML = `<i>Slot ${i+1} Trống</i><br><input type="text" id="n${i}" placeholder="Nhập tên"><br><input type="password" id="pw${i}" placeholder="Tạo mật khẩu"><br><button class="btn-purple" style="background:#43a047;" onclick="register(${i})">Tạo Tài Khoản</button>`;
+                    }
+                    container.appendChild(div);
                 }
-                container.appendChild(div);
-            }
+            });
         }
 
         function register(i) {
-            const name = document.getElementById(`n${i}`).value;
-            const pass = document.getElementById(`pw${i}`).value;
-            if(!name || !pass) return alert("Nhập đủ tên & pass nha!");
-            data.users[i] = { name, pass };
-            save(); renderLogin();
+            const name = document.getElementById(`n${i}`).value.trim();
+            const pass = document.getElementById(`pw${i}`).value.trim();
+            if(!name || !pass) return alert("Phải nhập đủ tên và mật khẩu!");
+            db.ref('quy_chung/users/' + i).set({ name: name, pass: pass });
         }
 
-        function login(i) {
+        function login(i, realPass, name) {
             const inputPass = document.getElementById(`p${i}`).value;
-            if(inputPass === data.users[i].pass) {
-                activeUser = data.users[i].name;
+            if(inputPass === realPass) {
+                activeUser = name;
                 startApp();
-            } else { alert("Sai pass rồi chủ tịch ơi!"); }
+            } else { alert("Sai mật khẩu rồi chủ tịch ơi!"); }
         }
 
         function startApp() {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('game-interface').style.display = 'flex';
-            document.getElementById('welcome-txt').innerText = "Chủ tịch: " + activeUser;
-            updateUI();
+            document.getElementById('welcome-name').innerText = activeUser;
+            loadData();
         }
 
-        function addMoney(amt) {
-            data.balance += amt;
-            data.history.unshift({ name: activeUser, amount: amt, time: new Date().toLocaleTimeString() });
-            if(data.history.length > 20) data.history.pop();
-            save(); updateUI(); dropEffect();
-        }
+        function loadData() {
+            // Tải tổng tiền
+            db.ref('quy_chung/balance').on('value', (snap) => {
+                currentTotal = snap.val() || 0;
+                document.getElementById('total-val').innerText = currentTotal.toLocaleString() + "đ";
+                
+                // Cập nhật thanh tiến độ (Max 1 triệu)
+                let percent = (currentTotal / 1000000) * 100;
+                if(percent > 100) percent = 100;
+                document.getElementById('prog-bar').style.width = percent + '%';
+                document.getElementById('prog-text').innerText = `${currentTotal.toLocaleString()} / 1.000.000đ`;
+            });
 
-        function updateUI() {
-            document.getElementById('total-val').innerText = data.balance.toLocaleString();
-            const hList = document.getElementById('history-list');
-            hList.innerHTML = '';
-            data.history.forEach(h => {
-                hList.innerHTML += `<div class="history-item"><b>${h.name}</b>: +${h.amount}đ <small>(${h.time})</small></div>`;
+            // Tải lịch sử
+            db.ref('quy_chung/history').orderByChild('timestamp').limitToLast(30).on('value', (snap) => {
+                const list = [];
+                snap.forEach(child => { list.unshift(child.val()); });
+                const hList = document.getElementById('history-list');
+                hList.innerHTML = '';
+                list.forEach(h => {
+                    hList.innerHTML += `<div class="history-item">
+                        <span><b>${h.name}</b> thả ${h.amount/1000}k</span>
+                        <span style="color:#888; font-size:12px;">${h.time}</span>
+                    </div>`;
+                });
+            });
+
+            // Tải đống tiền trong lọ (giữ nguyên không mất)
+            db.ref('quy_chung/money_notes').on('value', (snap) => {
+                const jar = document.getElementById('jar');
+                jar.innerHTML = ''; // Xóa cũ vẽ lại mới
+                snap.forEach(child => {
+                    const note = child.val();
+                    const nDiv = document.createElement('div');
+                    nDiv.className = `money-note ${note.type}`;
+                    nDiv.innerText = note.type === 'm1k' ? '1k' : '5k';
+                    // Đặt vị trí rơi ngẫu nhiên đã lưu
+                    nDiv.style.left = note.left + 'px';
+                    nDiv.style.setProperty('--stop-y', note.bottom + 'px');
+                    nDiv.style.setProperty('--rot', note.rotate + 'deg');
+                    jar.appendChild(nDiv);
+                });
             });
         }
 
-        function dropEffect() {
-            const n = document.createElement('div'); n.className = 'money-note';
-            document.getElementById('jar').appendChild(n);
-            setTimeout(() => n.remove(), 600);
+        function addMoney(amt) {
+            const timeStr = new Date().toLocaleTimeString('vi-VN');
+            
+            // Cập nhật tiền tổng
+            db.ref('quy_chung/balance').set(currentTotal + amt);
+            
+            // Lưu lịch sử
+            db.ref('quy_chung/history').push({ name: activeUser, amount: amt, time: timeStr, timestamp: Date.now() });
+
+            // Lưu tờ tiền rơi vào lọ (để giữ nó nằm im)
+            const type = amt === 1000 ? 'm1k' : 'm5k';
+            const left = Math.floor(Math.random() * 110) + 5; // Vị trí ngang (5 -> 115)
+            const bottom = Math.floor(Math.random() * 180) + 10; // Vị trí chồng lên nhau (10 -> 190)
+            const rot = Math.floor(Math.random() * 60) - 30; // Xoay nghiêng
+            
+            db.ref('quy_chung/money_notes').push({ type: type, left: left, bottom: bottom, rotate: rot });
         }
 
-        function save() { localStorage.setItem('myJarData', JSON.stringify(data)); }
-        renderLogin();
+        if(db) loadUsers();
     </script>
 </body>
 </html>
+Xong
